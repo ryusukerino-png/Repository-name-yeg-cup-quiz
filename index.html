@@ -235,13 +235,14 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   <audio id="bgm" preload="auto">
     <source src="opening_bgm.mp3" type="audio/mpeg">
   </audio>
-  <div id="op-content" onclick="startOpeningWithBGM()">
+  <div id="op-content">
     <div class="op-cup">🏆</div>
     <div class="op-eyecatch">GOLF COMPETITION</div>
     <div class="op-title"><span>第9回</span> YEG CUP</div>
     <div class="op-catch">負けられない戦いがここにある</div>
     <div class="op-bar-wrap"><div class="op-bar" id="op-bar"></div></div>
     <div class="op-tap">▶ タップしてスタート</div>
+    <button id="bgm-start-btn" onclick="startOpeningWithBGM()" style="display:none;margin-top:12px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);color:#fff;padding:8px 20px;border-radius:20px;font-size:16px;cursor:pointer;">🔊 BGMをON</button>
   </div>
 </div>
 
@@ -453,20 +454,34 @@ function loadGasUrl(){
 // ============================================================
 function startApp(){
   document.getElementById('opening').style.display = 'flex';
-  // タップ待ち（自動再生はブロックされるためタップを促す）
-  // startOpeningWithBGM() はop-contentのonclickで呼ばれる
+  setTimeout(()=>{
+    // 自動再生を試みる
+    const bgm = document.getElementById('bgm');
+    if(bgm){
+      bgm.volume = 0.7;
+      bgm.play().then(()=>{
+        // 自動再生成功 → そのままオープニング開始
+        startOpening();
+      }).catch(()=>{
+        // 自動再生ブロック → 音符ボタンを表示してタップを促す
+        const btn = document.getElementById('bgm-start-btn');
+        if(btn) btn.style.display = 'block';
+        startOpening(); // BGMなしでオープニング開始
+      });
+    } else {
+      startOpening();
+    }
+  }, 300);
 }
 
 // ============================================================
 // オープニング
 // ============================================================
 function startOpeningWithBGM(){
-  // タップした瞬間にBGM再生してオープニング開始
   const bgm = document.getElementById('bgm');
   if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
-  // op-contentのclickを無効化（二重起動防止）
-  document.getElementById('op-content').onclick = null;
-  startOpening();
+  const btn = document.getElementById('bgm-start-btn');
+  if(btn) btn.style.display = 'none';
 }
 
 function startOpening(){
