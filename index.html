@@ -410,7 +410,7 @@ const KANJI_PASS = '1234';
 const LS_GAS_KEY = 'yegcup_gas_url';
 const AUTO_REFRESH_SEC = 30;
 
-let GAS_URL = '';
+let GAS_URL = 'https://script.google.com/macros/s/AKfycbyLOLZKbWTYC1AAg8_qz-bypAXrsHaxX6Vs97sGdCDVr3oDsUFGnfJ2AUg7GmeqIiG7ig/exec';
 let DB = []; // サーバーから取得したデータ
 let betCount = 0;
 let kanjiUnlocked = false;
@@ -433,7 +433,7 @@ function saveGasUrl(){
 }
 
 function loadGasUrl(){
-  try{ return localStorage.getItem(LS_GAS_KEY)||''; }catch(e){ return ''; }
+  try{ return localStorage.getItem(LS_GAS_KEY)||'https://script.google.com/macros/s/AKfycbyLOLZKbWTYC1AAg8_qz-bypAXrsHaxX6Vs97sGdCDVr3oDsUFGnfJ2AUg7GmeqIiG7ig/exec'; }catch(e){ return 'https://script.google.com/macros/s/AKfycbyLOLZKbWTYC1AAg8_qz-bypAXrsHaxX6Vs97sGdCDVr3oDsUFGnfJ2AUg7GmeqIiG7ig/exec'; }
 }
 
 // ============================================================
