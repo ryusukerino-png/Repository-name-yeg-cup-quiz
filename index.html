@@ -366,6 +366,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 <div id="p-agg" class="pg">
   <div class="agg-hd">
     <h1>📊 コンペクイズ 集計</h1>
+    <div id="agg-sum-total" style="font-size:28px;font-weight:900;color:var(--gold);margin-top:8px;letter-spacing:.05em;">¥0</div>
     <div class="agg-sum" id="agg-sum">読み込み中...</div>
     <div class="live-badge"><span class="live-dot"></span>LIVE 自動更新 30秒</div>
     <button class="ref-btn" onclick="fetchAndRender()">🔄 今すぐ更新</button>
@@ -733,7 +734,7 @@ function renderList(){
   el.innerHTML = DB.map(e=>{
     const totalQ = e.bets.reduce((s,b)=>s+b.qty, 0);
     if(kanjiUnlocked){
-      // 幹事モード：詳細表示
+      // 幹事モード：詳細表示（口数・予想内容・削除ボタン）
       const betRows = e.bets.map(b=>
         `<div class="ent-bet-row">・${b.p1} <small style="color:#888">－</small> ${b.p2}　<span style="font-weight:700;color:var(--green)">${b.qty}口</span></div>`
       ).join('');
@@ -752,12 +753,11 @@ function renderList(){
           <div class="ent-time">${timeStr}</div>
         </div>`;
     } else {
-      // 通常モード：名前と口数のみ表示
+      // 通常モード：名前のみ表示（口数も隠す）
       return `
         <div class="ent-item">
           <div class="ent-head">
             <div class="ent-name">${e.name}</div>
-            <span class="ent-total">${totalQ}口</span>
           </div>
         </div>`;
     }
@@ -780,8 +780,11 @@ async function delEntry(name){
 // ============================================================
 function renderAgg(){
   const totalQ = DB.reduce((s,e)=>s+e.bets.reduce((ss,b)=>ss+b.qty,0), 0);
+  const totalYen = totalQ * 500;
+  const elTotal = document.getElementById('agg-sum-total');
+  if(elTotal) elTotal.textContent = '¥' + totalYen.toLocaleString();
   const el = document.getElementById('agg-sum');
-  if(el) el.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}口 ／ ${(totalQ*500).toLocaleString()}円`;
+  if(el) el.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}口`;
 
   const c1={}, c2={};
   DB.forEach(e=>e.bets.forEach(b=>{
@@ -796,7 +799,7 @@ function renderAgg(){
 function renderRank(id, map){
   const el = document.getElementById(id);
   if(!el) return;
-  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0, 5);
   if(!sorted.length){ el.innerHTML='<div class="empty">データなし</div>'; return; }
   const max = sorted[0][1];
   const cls = ['rp1','rp2','rp3'];
