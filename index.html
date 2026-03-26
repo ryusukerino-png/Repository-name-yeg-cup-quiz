@@ -239,7 +239,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 </audio>
 <div id="opening" style="display:none;">
   <div id="op-bg"></div>
-  <div id="op-content">
+  <div id="op-content" onclick="tapStart()">
     <div class="op-cup">🏆</div>
     <div class="op-eyecatch">GOLF COMPETITION</div>
     <div class="op-title"><span>第9回</span> YEG CUP</div>
@@ -457,12 +457,20 @@ function loadGasUrl(){
 // ============================================================
 function startApp(){
   document.getElementById('opening').style.display = 'flex';
-  setTimeout(()=>{
-    // 効果音を自動再生（スマホでは成功しやすい）
-    const se = document.getElementById('fanfare');
-    if(se){ se.volume=0.8; se.play().catch(()=>{}); }
-    startOpening();
-  }, 300);
+  // pointer-eventsを有効に（クリック受け付けるため）
+  document.getElementById('op-content').style.pointerEvents = 'auto';
+  document.getElementById('op-content').style.cursor = 'pointer';
+}
+
+let openingStarted = false;
+function tapStart(){
+  if(openingStarted) return;
+  openingStarted = true;
+  // 効果音再生
+  const se = document.getElementById('fanfare');
+  if(se){ se.volume=0.8; se.play().catch(()=>{}); }
+  // オープニング開始
+  startOpening();
 }
 
 // ============================================================
