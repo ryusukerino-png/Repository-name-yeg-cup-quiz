@@ -237,7 +237,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 <audio id="fanfare" preload="auto">
   <source src="fanfare.mp3" type="audio/mpeg">
 </audio>
-<div id="opening" style="display:none;">
+<div id="opening" style="display:none;" onclick="tapStart()">
   <div id="op-bg"></div>
   <div id="op-content">
     <div class="op-cup">🏆</div>
@@ -245,6 +245,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
     <div class="op-title"><span>第9回</span> YEG CUP</div>
     <div class="op-catch">負けられない戦いがここにある</div>
     <div class="op-bar-wrap"><div class="op-bar" id="op-bar"></div></div>
+    <div class="op-tap">▶ タップしてスタート</div>
   </div>
 </div>
 
@@ -449,16 +450,24 @@ function loadGasUrl(){
 function startApp(){
   const op = document.getElementById('opening');
   op.style.display = 'flex';
-  // ファンファーレ再生
+}
+
+let openingStarted = false;
+function tapStart(){
+  if(openingStarted) return;
+  openingStarted = true;
+  // ファンファーレ再生（ユーザー操作直後なので必ず鳴る）
   const se = document.getElementById('fanfare');
-  if(se){ se.volume=1.0; se.play().catch(()=>{}); }
+  if(se){ se.currentTime=0; se.volume=1.0; se.play().catch(()=>{}); }
+  // バー進行→8秒後に画面切り替え
   const bar = document.getElementById('op-bar');
   let progress = 0;
   const timer = setInterval(()=>{
-    progress += 100/80; // 8秒
+    progress += 100/80;
     if(bar) bar.style.width = Math.min(progress,100) + '%';
     if(progress >= 100){
       clearInterval(timer);
+      const op = document.getElementById('opening');
       const app = document.getElementById('app-wrap');
       op.style.display = 'none';
       app.style.display = 'block';
@@ -468,9 +477,6 @@ function startApp(){
     }
   }, 100);
 }
-
-let openingStarted = false;
-function tapStart(){}
 
 // ============================================================
 // オープニング
