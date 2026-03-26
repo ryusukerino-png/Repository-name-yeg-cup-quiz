@@ -514,7 +514,7 @@ async function apiGet(){
     const res = await fetch(GAS_URL + '?action=getAll&t=' + Date.now());
     const json = await res.json();
     if(json.status === 'ok'){
-      DB = json.entries || [];
+      DB = json.data || json.entries || [];
       setConnBar('ok', '✅ 最新データを取得しました（'+DB.length+'名登録）');
       return true;
     } else {
