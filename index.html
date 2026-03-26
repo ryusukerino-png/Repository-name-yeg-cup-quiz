@@ -343,7 +343,19 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   </div>
   <div class="card" style="margin-bottom:12px;">
     <div class="cb">
-      <div class="st" style="color:var(--muted);border-left-color:var(--gold);">📋 入力済み一覧</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div class="st" style="color:var(--muted);border-left-color:var(--gold);margin-bottom:0;">📋 入力済み一覧</div>
+        <div id="quiz-lock-btn">
+          <button class="pw-btn" onclick="showQuizLock()" id="quiz-unlock-btn" style="font-size:12px;">🔐 幹事</button>
+        </div>
+      </div>
+      <div id="quiz-lock-row" style="display:none;margin-bottom:8px;">
+        <div class="pw-row">
+          <input type="password" id="quiz-pw-inp" placeholder="パスワード" inputmode="numeric" maxlength="8"
+            onkeydown="if(event.key==='Enter')unlockQuizList()">
+          <button class="pw-btn" onclick="unlockQuizList()">解錠</button>
+        </div>
+      </div>
       <div id="ent-list"><div class="empty">読み込み中...</div></div>
     </div>
   </div>
@@ -822,6 +834,7 @@ function unlockKanji(){
     document.getElementById('kanji-detail').style.display='block';
     document.getElementById('pw-inp').value='';
     renderKanjiDetail();
+    renderList();
     toast('🔓 幹事モードで解錠しました');
   } else {
     toast('⚠️ パスワードが違います');
@@ -833,7 +846,29 @@ function lockKanji(){
   kanjiUnlocked = false;
   document.getElementById('lock-panel').style.display='block';
   document.getElementById('kanji-detail').style.display='none';
+  renderList();
   toast('🔒 幹事モードを終了しました');
+}
+
+function showQuizLock(){
+  const row = document.getElementById('quiz-lock-row');
+  row.style.display = row.style.display==='none' ? 'flex' : 'none';
+}
+
+function unlockQuizList(){
+  const pw = document.getElementById('quiz-pw-inp').value;
+  if(pw === KANJI_PASS){
+    kanjiUnlocked = true;
+    document.getElementById('quiz-lock-row').style.display='none';
+    document.getElementById('quiz-unlock-btn').textContent='🔓 幹事中';
+    document.getElementById('quiz-unlock-btn').style.background='var(--green)';
+    document.getElementById('quiz-pw-inp').value='';
+    renderList();
+    toast('🔓 幹事モードで解錠しました');
+  } else {
+    toast('⚠️ パスワードが違います');
+    document.getElementById('quiz-pw-inp').value='';
+  }
 }
 
 function renderKanjiDetail(){
