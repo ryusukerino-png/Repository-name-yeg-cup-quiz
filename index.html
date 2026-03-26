@@ -469,8 +469,25 @@ function tapStart(){
   // 効果音再生
   const se = document.getElementById('fanfare');
   if(se){ se.currentTime=0; se.volume=0.8; se.play().catch(()=>{}); }
-  // 少し遅らせてからオープニング開始
-  setTimeout(startOpening, 100);
+  // プログレスバーを表示してカウント
+  const bar = document.getElementById('op-bar');
+  const OP_DURATION = 4000;
+  const step = 100 / (OP_DURATION / 50);
+  let progress = 0;
+  const timer = setInterval(()=>{
+    progress = Math.min(progress + step, 100);
+    if(bar) bar.style.width = progress + '%';
+    if(progress >= 100){
+      clearInterval(timer);
+      // 画面切り替え
+      const op = document.getElementById('opening');
+      const app = document.getElementById('app-wrap');
+      if(op) op.style.display = 'none';
+      if(app){ app.style.display = 'block'; app.classList.add('visible'); }
+      fetchAndRender();
+      startAutoRefresh();
+    }
+  }, 50);
 }
 
 // ============================================================
