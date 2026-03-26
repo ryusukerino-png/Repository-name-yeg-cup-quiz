@@ -230,12 +230,12 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 </div>
 
 <!-- ===== OPENING ===== -->
-<div id="opening" style="display:none;" onclick="closeOpening()">
+<div id="opening" style="display:none;">
   <div id="op-bg"></div>
   <audio id="bgm" preload="auto">
     <source src="opening_bgm.mp3" type="audio/mpeg">
   </audio>
-  <div id="op-content">
+  <div id="op-content" onclick="startOpeningWithBGM()">
     <div class="op-cup">🏆</div>
     <div class="op-eyecatch">GOLF COMPETITION</div>
     <div class="op-title"><span>第9回</span> YEG CUP</div>
@@ -453,22 +453,23 @@ function loadGasUrl(){
 // ============================================================
 function startApp(){
   document.getElementById('opening').style.display = 'flex';
-  setTimeout(startOpening, 300);
+  // タップ待ち（自動再生はブロックされるためタップを促す）
+  // startOpeningWithBGM() はop-contentのonclickで呼ばれる
 }
 
 // ============================================================
 // オープニング
 // ============================================================
-function startOpening(){
+function startOpeningWithBGM(){
+  // タップした瞬間にBGM再生してオープニング開始
   const bgm = document.getElementById('bgm');
-  // オープニング画面クリックで再生（自動再生ブロック対策）
-  const op = document.getElementById('opening');
-  const tryPlay = () => {
-    if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
-  };
-  op.addEventListener('click', tryPlay, {once: true});
-  // 自動再生も試みる
   if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
+  // op-contentのclickを無効化（二重起動防止）
+  document.getElementById('op-content').onclick = null;
+  startOpening();
+}
+
+function startOpening(){
   const bar = document.getElementById('op-bar');
   const OP_DURATION = 8000;
   const step = 100 / (OP_DURATION / 100);
