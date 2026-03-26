@@ -230,9 +230,9 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 </div>
 
 <!-- ===== OPENING ===== -->
-<audio id="bgm" preload="auto">
-    <source src="opening_bgm.mp3" type="audio/mpeg">
-  </audio>
+
+
+
 
 <div id="opening" style="display:none;">
   <div id="op-bg"></div>
@@ -243,7 +243,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
     <div class="op-catch">負けられない戦いがここにある</div>
     <div class="op-bar-wrap"><div class="op-bar" id="op-bar"></div></div>
     <div class="op-tap">▶ タップしてスタート</div>
-    <button id="bgm-start-btn" onclick="startOpeningWithBGM()" style="display:none;margin-top:12px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.6);color:#fff;padding:8px 20px;border-radius:20px;font-size:16px;cursor:pointer;">🔊 BGMをON</button>
+    
   </div>
 </div>
 
@@ -455,36 +455,12 @@ function loadGasUrl(){
 // ============================================================
 function startApp(){
   document.getElementById('opening').style.display = 'flex';
-  setTimeout(()=>{
-    // 自動再生を試みる
-    const bgm = document.getElementById('bgm');
-    if(bgm){
-      bgm.volume = 0.7;
-      bgm.play().then(()=>{
-        // 自動再生成功 → そのままオープニング開始
-        startOpening();
-      }).catch(()=>{
-        // 自動再生ブロック → 音符ボタンを表示してタップを促す
-        const btn = document.getElementById('bgm-start-btn');
-        if(btn) btn.style.display = 'block';
-        startOpening(); // BGMなしでオープニング開始
-      });
-    } else {
-      startOpening();
-    }
-  }, 300);
+  setTimeout(startOpening, 300);
 }
 
 // ============================================================
 // オープニング
 // ============================================================
-function startOpeningWithBGM(){
-  const bgm = document.getElementById('bgm');
-  if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
-  const btn = document.getElementById('bgm-start-btn');
-  if(btn) btn.style.display = 'none';
-}
-
 function startOpening(){
   const bar = document.getElementById('op-bar');
   const OP_DURATION = 8000;
@@ -501,15 +477,6 @@ function closeOpening(){
   clearInterval(opTimer);
   const op = document.getElementById('opening');
   const app = document.getElementById('app-wrap');
-  const bgm = document.getElementById('bgm');
-  if(bgm && !bgm.paused){
-    let vol = bgm.volume;
-    const fade = setInterval(()=>{
-      vol = Math.max(0, vol - 0.07);
-      bgm.volume = vol;
-      if(vol <= 0){ clearInterval(fade); bgm.pause(); }
-    }, 80);
-  }
   op.classList.add('fade-out');
   setTimeout(()=>{
     op.style.display = 'none';
