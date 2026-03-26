@@ -529,11 +529,14 @@ async function apiGet(){
 
 async function apiPost(payload){
   try{
-    const res = await fetch(GAS_URL, {
-      method:'POST',
-      body: JSON.stringify(payload),
-      headers:{'Content-Type':'application/json'}
-    });
+    // GASはContent-Type:application/jsonのPOSTリダイレクトに対応していないため
+    // URLパラメータ形式でGETとして送信する
+    const params = new URLSearchParams();
+    params.append('action', payload.action);
+    if(payload.name) params.append('name', payload.name);
+    if(payload.bets) params.append('bets', encodeURIComponent(JSON.stringify(payload.bets)));
+    if(payload.time) params.append('time', payload.time);
+    const res = await fetch(GAS_URL + '?' + params.toString());
     const json = await res.json();
     return json;
   }catch(e){
