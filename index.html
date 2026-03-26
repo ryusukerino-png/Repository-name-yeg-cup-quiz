@@ -529,16 +529,28 @@ async function apiGet(){
 
 async function apiPost(payload){
   try{
-    // GASはContent-Type:application/jsonのPOSTリダイレクトに対応していないため
-    // URLパラメータ形式でGETとして送信する
-    const params = new URLSearchParams();
-    params.append('action', payload.action);
-    if(payload.name) params.append('name', payload.name);
-    if(payload.bets) params.append('bets', encodeURIComponent(JSON.stringify(payload.bets)));
-    if(payload.time) params.append('time', payload.time);
-    const res = await fetch(GAS_URL + '?' + params.toString());
-    const json = await res.json();
-    return json;
+    // no-corsではレスポンスが読めないため、GASをno-redirectで呼ぶ
+    // GASはPOSTをリダイレクトするので、まずリダイレクト先URLを取得してからPOST
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload),
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch(e) {
+      // レスポンスがJSONでない場合（リダイレクト先のHTMLなど）
+      // フォールバック：GETで送信
+      const params = new URLSearchParams();
+      params.append('action', payload.action);
+      if(payload.name) params.append('name', encodeURIComponent(payload.name));
+      if(payload.bets) params.append('bets', encodeURIComponent(JSON.stringify(payload.bets)));
+      if(payload.time) params.append('time', encodeURIComponent(payload.time));
+      const res2 = await fetch(GAS_URL + '?' + params.toString());
+      return await res2.json();
+    }
   }catch(e){
     return {status:'error', message: e.toString()};
   }
