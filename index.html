@@ -239,13 +239,12 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 </audio>
 <div id="opening" style="display:none;">
   <div id="op-bg"></div>
-  <div id="op-content" onclick="tapStart()">
+  <div id="op-content">
     <div class="op-cup">🏆</div>
     <div class="op-eyecatch">GOLF COMPETITION</div>
     <div class="op-title"><span>第9回</span> YEG CUP</div>
     <div class="op-catch">負けられない戦いがここにある</div>
     <div class="op-bar-wrap"><div class="op-bar" id="op-bar"></div></div>
-    <div class="op-tap">▶ タップしてスタート</div>
   </div>
 </div>
 
@@ -458,24 +457,17 @@ function loadGasUrl(){
 function startApp(){
   const op = document.getElementById('opening');
   op.style.display = 'flex';
-}
-
-let openingStarted = false;
-function tapStart(){
-  if(openingStarted) return;
-  openingStarted = true;
-  // 効果音
+  // 効果音再生を試みる（自動再生）
   const se = document.getElementById('fanfare');
-  if(se){ se.currentTime=0; se.volume=1.0; se.play().catch(()=>{}); }
-  // バー進行
+  if(se){ se.volume=1.0; se.play().catch(()=>{}); }
+  // 8秒後に自動で画面切り替え
   const bar = document.getElementById('op-bar');
   let progress = 0;
   const timer = setInterval(()=>{
-    progress += 2;
+    progress += 100/80; // 8秒
     if(bar) bar.style.width = Math.min(progress,100) + '%';
     if(progress >= 100){
       clearInterval(timer);
-      const op = document.getElementById('opening');
       const app = document.getElementById('app-wrap');
       op.style.display = 'none';
       app.style.display = 'block';
@@ -483,8 +475,22 @@ function tapStart(){
       fetchAndRender();
       startAutoRefresh();
     }
-  }, 80);
+  }, 100);
+  // 画面タップでもスキップ可能
+  op.addEventListener('click', ()=>{
+    clearInterval(timer);
+    if(bar) bar.style.width = '100%';
+    const app = document.getElementById('app-wrap');
+    op.style.display = 'none';
+    app.style.display = 'block';
+    app.classList.add('visible');
+    fetchAndRender();
+    startAutoRefresh();
+  }, {once: true});
 }
+
+let openingStarted = false;
+function tapStart(){}
 
 // ============================================================
 // オープニング
