@@ -509,6 +509,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 const KANJI_PASS = '0426';
 const LS_GAS_KEY = 'yegcup_gas_url';
 const LS_CODE_KEY = 'yegcup_mycode'; // {name, code} を保存
+const LS_DB_KEY = 'yegcup_db_cache'; // DBキャッシュ
 const AUTO_REFRESH_SEC = 30;
 const DEADLINE = new Date('2026-04-06T23:59:00+09:00'); // 締め切り
 
@@ -641,16 +642,31 @@ async function apiGet(){
     const json = await res.json();
     if(json.status === 'ok'){
       DB = json.data || json.entries || [];
+      // ローカルにキャッシュ保存
+      try{ localStorage.setItem(LS_DB_KEY, JSON.stringify(DB)); }catch(e){}
       setConnBar('ok', '✅ 最新データを取得しました（'+DB.length+'名登録）');
       return true;
     } else {
       setConnBar('err', '❌ エラー: ' + (json.message||'不明'));
+      loadDbCache(); // キャッシュから復元
       return false;
     }
   }catch(e){
-    setConnBar('err', '❌ 通信エラー。URLを確認してください');
+    setConnBar('err', '❌ 通信エラー。キャッシュを表示中');
+    loadDbCache(); // キャッシュから復元
     return false;
   }
+}
+
+// キャッシュからDB復元
+function loadDbCache(){
+  try{
+    const cached = localStorage.getItem(LS_DB_KEY);
+    if(cached){
+      DB = JSON.parse(cached);
+      updCnt(); renderList(); renderAgg();
+    }
+  }catch(e){}
 }
 
 async function apiPost(payload){
@@ -1168,6 +1184,8 @@ window.addEventListener('DOMContentLoaded', function(){
   GAS_URL = loadGasUrl();
   if(GAS_URL){
     document.getElementById('setup-screen').style.display = 'none';
+    // キャッシュを即座に読み込んで表示（オープニング前でも集計を保持）
+    loadDbCache();
     startApp();
   }
   // 最初の予想行
