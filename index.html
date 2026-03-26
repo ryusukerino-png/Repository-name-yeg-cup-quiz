@@ -839,17 +839,17 @@ async function regEntry(){
   const ts = (now.getMonth()+1)+'/'+(now.getDate())+' '+
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
 
-  const result = await apiPost({ action:'register', name, bets, time:ts });
+  const result = await apiPost({ action:'register', name, bets, time:ts, code: genCode() });
 
   btn.disabled = false;
   btn.innerHTML = '✅ 予想を登録する';
 
   if(result.status === 'ok'){
-    // 確認コードを発行・保存
-    const code = genCode();
+    // 確認コードを発行
+    const code = result.code || genCode(); // GASが返してくれたコードを優先
+    // ローカルにも保存（バックアップ）
     try{
       const stored = JSON.parse(localStorage.getItem(LS_CODE_KEY)||'[]');
-      // 同名は上書き
       const idx = stored.findIndex(x=>x.name===name);
       if(idx>=0) stored[idx]={name,code};
       else stored.push({name,code});
@@ -1016,11 +1016,12 @@ function renderKanjiDetail(){
         ${i===0?`<td rowspan="${e.bets.length}" style="font-weight:900;vertical-align:middle;border-right:2px solid #eee;">${e.name}<br><small style="color:#aaa;font-weight:400;">${e.time||''}</small></td>`:''}
         <td>${b.p1}</td><td>${b.p2}</td>
         <td style="text-align:center;font-weight:700;color:var(--green)">${b.qty}口</td>
+        ${i===0?`<td rowspan="${e.bets.length}" style="text-align:center;font-weight:900;color:var(--gold);font-size:16px;letter-spacing:.1em;vertical-align:middle;">${e.code||'—'}</td>`:''}
       </tr>`;
     });
   });
   el.innerHTML=`<table class="dtbl">
-    <thead><tr><th>お名前</th><th><span class="b1">1位予想</span></th><th><span class="b2">2位予想</span></th><th>口数</th></tr></thead>
+    <thead><tr><th>お名前</th><th><span class="b1">1位予想</span></th><th><span class="b2">2位予想</span></th><th>口数</th><th>🔑コード</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
@@ -1098,21 +1099,27 @@ function checkMyVote(){
   if(!name){ toast('⚠️ お名前を選んでください'); return; }
   if(!code){ toast('⚠️ 確認コードを入力してください'); return; }
 
-  // ローカルのコード照合
-  let stored = [];
-  try{ stored = JSON.parse(localStorage.getItem(LS_CODE_KEY)||'[]'); }catch(e){}
-  const rec = stored.find(x=>x.name===name);
-  if(!rec || rec.code !== code){
-    document.getElementById('chk-result').innerHTML =
-      '<div class="empty" style="color:var(--red);">⚠️ 名前またはコードが違います</div>';
-    return;
-  }
-
-  // DBから該当エントリ取得
+  // DBから該当エントリ取得（サーバーデータ優先）
   const entry = DB.find(e=>e.name===name);
   if(!entry){
     document.getElementById('chk-result').innerHTML =
-      '<div class="empty">データが見つかりません（まだ投票がない可能性があります）</div>';
+      '<div class="empty">まだ投票が見つかりません</div>';
+    return;
+  }
+
+  // サーバー保存のコードと照合
+  const serverCode = entry.code || '';
+  // ローカルコードもフォールバックで確認
+  let localCode = '';
+  try{
+    const stored = JSON.parse(localStorage.getItem(LS_CODE_KEY)||'[]');
+    const rec = stored.find(x=>x.name===name);
+    if(rec) localCode = rec.code;
+  }catch(e){}
+
+  if(serverCode !== code && localCode !== code){
+    document.getElementById('chk-result').innerHTML =
+      '<div class="empty" style="color:var(--red);">⚠️ 確認コードが違います</div>';
     return;
   }
 
