@@ -449,7 +449,7 @@ function startApp(){
   const bar = document.getElementById('op-bar');
   let progress = 0;
   const timer = setInterval(()=>{
-    progress += 100/80;
+    progress += 100/40;
     if(bar) bar.style.width = Math.min(progress,100) + '%';
     if(progress >= 100){
       clearInterval(timer);
