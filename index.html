@@ -312,7 +312,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 <div id="p-quiz" class="pg">
   <div class="quiz-hd">
     <h1>🏆 コンペクイズ</h1>
-    <div class="cond">１pt ／ ２pt以上</div>
+    <div class="cond">１口 500pt ／ ２口以上</div>
   </div>
   <div style="padding:0 12px;margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="cnt-pill"><span class="dot"></span>登録済み: <span id="reg-cnt">0</span>名</span>
@@ -612,18 +612,18 @@ function addBetRow(p1='', p2='', qty=1){
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:12px;color:var(--muted);font-weight:700;">pt：</span>
+          <span style="font-size:12px;color:var(--muted);font-weight:700;">口数：</span>
           <div class="qty-ctrl">
             <button class="qm-btn" onclick="chgQ(${id},-1)">－</button>
             <span class="qm-val" id="q-${id}">${qty}</span>
-            <span class="qm-unit">pt</span>
+            <span class="qm-unit">口</span>
             <button class="qm-btn" onclick="chgQ(${id},1)">＋</button>
           </div>
         </div>
         <button class="del-bet" onclick="delBetRow(${id})">✕ 削除</button>
       </div>
       <div class="bet-footer">
-        <span class="bet-price"><span id="qn-${id}">${qty}</span>pt ＝ <strong id="qp-${id}">${(qty*500).toLocaleString()}pt</strong></span>
+        <span class="bet-price"500pt × <span id="qn-${id}">${qty}</span>口 ＝ <strong id="qp-${id}">${(qty*500).toLocaleString()}pt</strong></span>
       </div>
     </div>`;
   document.getElementById('bet-list').insertAdjacentHTML('beforeend', html);
@@ -654,7 +654,7 @@ function calcTotal(){
     if(q) totalQ += parseInt(q.textContent||0);
   });
   const el = document.getElementById('total-disp');
-  if(el) el.textContent = totalQ+'pt ／ '+(totalQ*500).toLocaleString()+'pt';
+  if(el) el.textContent = totalQ+'口 ／ '+(totalQ*500).toLocaleString()+'pt';
 }
 
 function getBetRows(){
@@ -689,7 +689,7 @@ async function regEntry(){
   }
 
   const totalQ = bets.reduce((s,b)=>s+b.qty, 0);
-  if(totalQ < 2){ toast('⚠️ 合計2pt以上にしてください（現在'+totalQ+'pt）'); return; }
+  if(totalQ < 2){ toast('⚠️ 合計2口以上にしてください（現在'+totalQ+'口）'); return; }
 
   // 重複確認
   const exists = DB.find(e=>e.name===name);
@@ -712,7 +712,7 @@ async function regEntry(){
   btn.innerHTML = '✅ 予想を登録する';
 
   if(result.status === 'ok'){
-    toast('✅ 登録しました！（合計 '+totalQ+'pt）');
+    toast('✅ 登録しました！（合計 '+totalQ+'口）');
     document.getElementById('s-name').value = '';
     document.getElementById('bet-list').innerHTML = '';
     betCount = 0;
@@ -736,7 +736,7 @@ function renderList(){
     if(kanjiUnlocked){
       // 幹事モード：詳細表示（口数・予想内容・削除ボタン）
       const betRows = e.bets.map(b=>
-        `<div class="ent-bet-row">・${b.p1} <small style="color:#888">－</small> ${b.p2}　<span style="font-weight:700;color:var(--green)">${b.qty}pt</span></div>`
+        `<div class="ent-bet-row">・${b.p1} <small style="color:#888">－</small> ${b.p2}　<span style="font-weight:700;color:var(--green)">${b.qty}口</span></div>`
       ).join('');
       const t = e.time ? new Date(e.time) : null;
       const timeStr = t && !isNaN(t) ? (t.getMonth()+1)+'/'+(t.getDate())+' '+(String(t.getHours()).padStart(2,'0'))+':'+(String(t.getMinutes()).padStart(2,'0')) : (e.time||'');
@@ -745,7 +745,7 @@ function renderList(){
           <div class="ent-head">
             <div class="ent-name">${e.name}</div>
             <div style="display:flex;gap:6px;align-items:center;">
-              <span class="ent-total">${totalQ}pt</span>
+              <span class="ent-total">${totalQ}口</span>
               <button class="del-ent" onclick="delEntry('${e.name}')">削除</button>
             </div>
           </div>
@@ -784,7 +784,7 @@ function renderAgg(){
   const elTotal = document.getElementById('agg-sum-total');
   if(elTotal) elTotal.textContent = totalYen.toLocaleString()+'pt';
   const el = document.getElementById('agg-sum');
-  if(el) el.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}pt`;
+  if(el) el.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}口`;
 
   const c1={}, c2={};
   DB.forEach(e=>e.bets.forEach(b=>{
@@ -808,7 +808,7 @@ function renderRank(id, map){
       <div class="rpos ${cls[i]||''}">${i+1}</div>
       <div class="rname">${n}</div>
       <div class="rbar-w"><div class="rbar" style="width:${Math.round(c/max*100)}%"></div></div>
-      <div class="rcnt">${c}pt</div>
+      <div class="rcnt">${c}口</div>
     </div>`).join('');
 }
 
@@ -871,12 +871,12 @@ function renderKanjiDetail(){
       rows += `<tr>
         ${i===0?`<td rowspan="${e.bets.length}" style="font-weight:900;vertical-align:middle;border-right:2px solid #eee;">${e.name}<br><small style="color:#aaa;font-weight:400;">${e.time||''}</small></td>`:''}
         <td>${b.p1}</td><td>${b.p2}</td>
-        <td style="text-align:center;font-weight:700;color:var(--green)">${b.qty}pt</td>
+        <td style="text-align:center;font-weight:700;color:var(--green)">${b.qty}口</td>
       </tr>`;
     });
   });
   el.innerHTML=`<table class="dtbl">
-    <thead><tr><th>お名前</th><th><span class="b1">1位予想</span></th><th><span class="b2">2位予想</span></th><th>pt</th></tr></thead>
+    <thead><tr><th>お名前</th><th><span class="b1">1位予想</span></th><th><span class="b2">2位予想</span></th><th>口数</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
@@ -886,7 +886,7 @@ function renderKanjiDetail(){
 function expCSV(){
   if(!DB.length){ toast('⚠️ データがありません'); return; }
   const bom = '\uFEFF';
-  let csv = 'お名前,1位予想,2位予想,pt,登録時刻\n';
+  let csv = 'お名前,1位予想,2位予想,口数,登録時刻\n';
   DB.forEach(e=>e.bets.forEach(b=>{
     csv += `"${e.name}","${b.p1}","${b.p2}",${b.qty},"${e.time||''}"\n`;
   }));
@@ -900,11 +900,11 @@ function expCSV(){
 function expTxt(){
   if(!DB.length){ toast('⚠️ データがありません'); return; }
   const tq = DB.reduce((s,e)=>s+e.bets.reduce((ss,b)=>ss+b.qty,0), 0);
-  let t = `■ コンペクイズ 集計\n投票:${DB.length}名 / 計:${tq}pt / ${(tq*500).toLocaleString()}pt\n\n`;
+  let t = `■ コンペクイズ 集計\n投票:${DB.length}名 / 計:${tq}口 / ${(tq*500).toLocaleString()}pt\n\n`;
   const c1={};
   DB.forEach(e=>e.bets.forEach(b=>{ c1[b.p1]=(c1[b.p1]||0)+b.qty; }));
   t += '【優勝予想 票数】\n';
-  Object.entries(c1).sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>{ t+=`  ${n}: ${c}pt\n`; });
+  Object.entries(c1).sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>{ t+=`  ${n}: ${c}口\n`; });
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(t).then(()=>toast('📋 コピーしました')).catch(()=>fbCopy(t));
   } else fbCopy(t);
