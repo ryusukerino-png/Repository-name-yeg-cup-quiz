@@ -468,9 +468,9 @@ function tapStart(){
   openingStarted = true;
   // 効果音再生
   const se = document.getElementById('fanfare');
-  if(se){ se.volume=0.8; se.play().catch(()=>{}); }
-  // オープニング開始
-  startOpening();
+  if(se){ se.currentTime=0; se.volume=0.8; se.play().catch(()=>{}); }
+  // 少し遅らせてからオープニング開始
+  setTimeout(startOpening, 100);
 }
 
 // ============================================================
