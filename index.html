@@ -234,6 +234,9 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 
 
 
+<audio id="fanfare" preload="auto">
+  <source src="fanfare.mp3" type="audio/mpeg">
+</audio>
 <div id="opening" style="display:none;">
   <div id="op-bg"></div>
   <div id="op-content">
@@ -446,10 +449,13 @@ function loadGasUrl(){
 function startApp(){
   const op = document.getElementById('opening');
   op.style.display = 'flex';
+  // ファンファーレ再生
+  const se = document.getElementById('fanfare');
+  if(se){ se.volume=1.0; se.play().catch(()=>{}); }
   const bar = document.getElementById('op-bar');
   let progress = 0;
   const timer = setInterval(()=>{
-    progress += 100/60;
+    progress += 100/80; // 8秒
     if(bar) bar.style.width = Math.min(progress,100) + '%';
     if(progress >= 100){
       clearInterval(timer);
