@@ -96,7 +96,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 #app-wrap{opacity:0;transition:opacity .7s;}
 #app-wrap.visible{opacity:1;}
 #nav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--green2);display:flex;box-shadow:0 2px 8px rgba(0,0,0,.3);}
-.nb{flex:1;padding:11px 2px 9px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:10.5px;font-weight:700;letter-spacing:.03em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.nb{flex:1;padding:11px 2px 9px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:9.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .nb .ic{font-size:19px;}
 .nb.on{color:#fff;border-bottom:3px solid var(--gold);background:rgba(255,255,255,.09);}
 .pg{display:none;padding-top:58px;padding-bottom:28px;min-height:100vh;}
@@ -286,6 +286,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 <nav id="nav">
   <button class="nb on" id="nb-uma"  onclick="go('uma')"> <span class="ic">⛳</span>組み合わせ</button>
   <button class="nb"    id="nb-quiz" onclick="go('quiz')"><span class="ic">🎯</span>クイズ入力</button>
+  <button class="nb"    id="nb-chk"  onclick="go('chk')"> <span class="ic">🔍</span>投票確認</button>
   <button class="nb"    id="nb-agg"  onclick="go('agg')"> <span class="ic">📊</span>集　計</button>
 </nav>
 
@@ -390,7 +391,48 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   </div>
 </div>
 
-<!-- ========== PAGE3 集計 ========== -->
+<!-- ========== PAGE3 投票確認 ========== -->
+<div id="p-chk" class="pg">
+  <div class="quiz-hd">
+    <h1>🔍 投票確認</h1>
+    <div class="cond">お名前 ＋ 確認コードで自分の予想を確認</div>
+  </div>
+  <div class="card">
+    <div class="cb">
+      <div class="st">確認コードを入力してください</div>
+      <div class="field">
+        <label>👤 あなたのお名前</label>
+        <select id="chk-name">
+          <option value="">-- 選んでください --</option>
+          <option>山崎 直行</option><option>増田 顕</option><option>李家 隆介</option><option>平野 丈</option>
+          <option>立石 賀也</option><option>橋爪 勇人</option><option>宇都宮 初美</option><option>酒井 広司</option>
+          <option>吉岡 隆徳</option><option>佐々木 宏知</option><option>平賀 昌樹</option>
+          <option>宮本 貴嗣</option><option>野口 勇人</option><option>小出 周平</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>🔑 確認コード（投票時に表示された4桁）</label>
+        <input type="text" id="chk-code" placeholder="例：4829" maxlength="4" inputmode="numeric"
+          style="letter-spacing:.3em;font-size:20px;text-align:center;"
+          onkeydown="if(event.key==='Enter')checkMyVote()">
+      </div>
+      <button class="reg-btn" onclick="checkMyVote()">🔍 確認する</button>
+      <div id="chk-result" style="margin-top:14px;"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:10px;">
+    <div class="cb">
+      <div class="st" style="color:var(--muted);font-size:12px;">📌 確認コードについて</div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.7;">
+        確認コードは投票完了時に表示される4桁の番号です。<br>
+        メモしておいてください。<br>
+        コードを忘れた場合は幹事にお問い合わせください。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE4 集計 ========== -->
 <div id="p-agg" class="pg">
   <div class="agg-hd">
     <h1>📊 コンペクイズ 集計</h1>
@@ -437,6 +479,27 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 </div>
 
 </div><!-- /app-wrap -->
+
+<!-- ===== 確認コード モーダル ===== -->
+<div id="code-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#fff;border-radius:18px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="font-size:44px;margin-bottom:8px;">✅</div>
+    <div style="font-size:18px;font-weight:900;color:var(--green);margin-bottom:4px;">登録しました！</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;" id="code-modal-name"></div>
+    <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px;">🔑 あなたの確認コード</div>
+      <div id="code-modal-code" style="font-size:48px;font-weight:900;color:var(--green);letter-spacing:.3em;"></div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px;">「投票確認」タブで使用します。メモしてください。</div>
+    </div>
+    <div style="font-size:13px;color:var(--txt);margin-bottom:20px;">
+      合計: <strong id="code-modal-total" style="color:var(--green);"></strong>
+    </div>
+    <button onclick="closeCodeModal()" style="width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;">
+      コードをメモしました ✔
+    </button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -445,7 +508,9 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 // ============================================================
 const KANJI_PASS = '0426';
 const LS_GAS_KEY = 'yegcup_gas_url';
+const LS_CODE_KEY = 'yegcup_mycode'; // {name, code} を保存
 const AUTO_REFRESH_SEC = 30;
+const DEADLINE = new Date('2026-04-06T23:59:00+09:00'); // 締め切り
 
 let GAS_URL = 'https://script.google.com/macros/s/AKfycbxJK39shEzZAGpYR1yQPqVdrT_pg0gfGlBjQoxCEY5LXx01loWfTf20gngXj_vYrTBo_Q/exec';
 let DB = []; // サーバーから取得したデータ
@@ -453,6 +518,20 @@ let betCount = 0;
 let kanjiUnlocked = false;
 let autoRefreshTimer = null;
 let opTimer = null;
+
+// ============================================================
+// 締め切りチェック
+// ============================================================
+function isPastDeadline(){
+  return new Date() > DEADLINE;
+}
+
+// ============================================================
+// 確認コード生成（4桁）
+// ============================================================
+function genCode(){
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
 
 // ============================================================
 // GAS URL 設定
@@ -534,11 +613,12 @@ function tapStart(){
 // ナビゲーション
 // ============================================================
 function go(name){
-  ['uma','quiz','agg'].forEach(n=>{
+  ['uma','quiz','chk','agg'].forEach(n=>{
     document.getElementById('p-'+n).classList.toggle('on', n===name);
     document.getElementById('nb-'+n).classList.toggle('on', n===name);
   });
   if(name==='quiz') fetchAndRender();
+  if(name==='chk')  fetchAndRender();
   if(name==='agg')  fetchAndRender();
 }
 
@@ -722,6 +802,12 @@ function getBetRows(){
 // 登録（サーバー送信）
 // ============================================================
 async function regEntry(){
+  // 締め切りチェック
+  if(isPastDeadline()){
+    toast('🔒 投票は締め切りました（4/6 23:59 終了）');
+    return;
+  }
+
   const name = document.getElementById('s-name').value;
   if(!name){ toast('⚠️ お名前を選んでください'); return; }
 
@@ -759,7 +845,18 @@ async function regEntry(){
   btn.innerHTML = '✅ 予想を登録する';
 
   if(result.status === 'ok'){
-    toast('✅ 登録しました！（合計 '+totalQ+'口）');
+    // 確認コードを発行・保存
+    const code = genCode();
+    try{
+      const stored = JSON.parse(localStorage.getItem(LS_CODE_KEY)||'[]');
+      // 同名は上書き
+      const idx = stored.findIndex(x=>x.name===name);
+      if(idx>=0) stored[idx]={name,code};
+      else stored.push({name,code});
+      localStorage.setItem(LS_CODE_KEY, JSON.stringify(stored));
+    }catch(e){}
+    // モーダルで確認コード表示
+    showCodeModal(name, code, totalQ);
     document.getElementById('s-name').value = '';
     document.getElementById('bet-list').innerHTML = '';
     betCount = 0;
@@ -979,6 +1076,75 @@ async function rstAll(){
 }
 
 // ============================================================
+// 確認コード モーダル表示
+// ============================================================
+function showCodeModal(name, code, totalQ){
+  const modal = document.getElementById('code-modal');
+  document.getElementById('code-modal-name').textContent = name;
+  document.getElementById('code-modal-code').textContent = code;
+  document.getElementById('code-modal-total').textContent = totalQ+'口';
+  modal.style.display = 'flex';
+}
+function closeCodeModal(){
+  document.getElementById('code-modal').style.display = 'none';
+}
+
+// ============================================================
+// 投票確認タブ
+// ============================================================
+function checkMyVote(){
+  const name = document.getElementById('chk-name').value;
+  const code = document.getElementById('chk-code').value.trim();
+  if(!name){ toast('⚠️ お名前を選んでください'); return; }
+  if(!code){ toast('⚠️ 確認コードを入力してください'); return; }
+
+  // ローカルのコード照合
+  let stored = [];
+  try{ stored = JSON.parse(localStorage.getItem(LS_CODE_KEY)||'[]'); }catch(e){}
+  const rec = stored.find(x=>x.name===name);
+  if(!rec || rec.code !== code){
+    document.getElementById('chk-result').innerHTML =
+      '<div class="empty" style="color:var(--red);">⚠️ 名前またはコードが違います</div>';
+    return;
+  }
+
+  // DBから該当エントリ取得
+  const entry = DB.find(e=>e.name===name);
+  if(!entry){
+    document.getElementById('chk-result').innerHTML =
+      '<div class="empty">データが見つかりません（まだ投票がない可能性があります）</div>';
+    return;
+  }
+
+  const totalQ = entry.bets.reduce((s,b)=>s+b.qty, 0);
+  const betRows = entry.bets.map((b,i)=>
+    `<div class="ent-bet-row">予想${i+1}: <strong>${b.p1}</strong> 優勝 / <strong>${b.p2}</strong> 準優勝　${b.qty}口</div>`
+  ).join('');
+  document.getElementById('chk-result').innerHTML = `
+    <div class="ent-item">
+      <div class="ent-head">
+        <div class="ent-name" style="color:var(--green);">✅ ${entry.name}</div>
+        <span class="ent-total">${totalQ}口</span>
+      </div>
+      ${betRows}
+      <div class="ent-time">登録: ${entry.time||''}</div>
+    </div>`;
+}
+
+// ============================================================
+// 起動時に投票ボタン状態を更新
+// ============================================================
+function updateDeadlineUI(){
+  const btn = document.getElementById('reg-btn');
+  if(!btn) return;
+  if(isPastDeadline()){
+    btn.disabled = true;
+    btn.textContent = '🔒 受付終了（4/6 23:59 締め切り）';
+    btn.style.background = '#aaa';
+  }
+}
+
+// ============================================================
 // トースト
 // ============================================================
 let _tt;
@@ -999,6 +1165,8 @@ window.addEventListener('DOMContentLoaded', function(){
   }
   // 最初の予想行
   addBetRow();
+  // 締め切りUI更新
+  updateDeadlineUI();
 });
 </script>
 </body>
