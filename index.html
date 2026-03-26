@@ -461,6 +461,13 @@ function startApp(){
 // ============================================================
 function startOpening(){
   const bgm = document.getElementById('bgm');
+  // オープニング画面クリックで再生（自動再生ブロック対策）
+  const op = document.getElementById('opening');
+  const tryPlay = () => {
+    if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
+  };
+  op.addEventListener('click', tryPlay, {once: true});
+  // 自動再生も試みる
   if(bgm){ bgm.volume=0.7; bgm.play().catch(()=>{}); }
   const bar = document.getElementById('op-bar');
   const OP_DURATION = 8000;
