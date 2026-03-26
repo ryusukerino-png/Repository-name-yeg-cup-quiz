@@ -41,6 +41,27 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 .setup-note{font-size:11px;color:#999;margin-top:10px;line-height:1.6;text-align:center;}
 
 /* ===== OPENING ===== */
+/* ===== INTRO SCREEN ===== */
+#intro-screen{
+  position:fixed;inset:0;z-index:10000;background:#000;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+#intro-text{
+  font-size:clamp(20px,6vw,36px);
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.1em;
+  text-align:center;
+  padding:0 24px;
+  opacity:0;
+  animation:introFadeIn 1.2s 0.5s forwards, introFadeOut 0.8s 3s forwards;
+}
+@keyframes introFadeIn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
+@keyframes introFadeOut{from{opacity:1;}to{opacity:0;}}
+#intro-screen.blackout{animation:blackout .6s forwards;}
+@keyframes blackout{to{opacity:0;}}
+
 #opening{
   position:fixed;inset:0;z-index:9999;background:#000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -237,6 +258,11 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 <audio id="fanfare" preload="auto">
   <source src="fanfare.mp3" type="audio/mpeg">
 </audio>
+<!-- ===== INTRO SCREEN ===== -->
+<div id="intro-screen" style="display:none;" onclick="skipIntro()">
+  <div id="intro-text">勝利を掴む準備は出来てるか？</div>
+</div>
+
 <div id="opening" style="display:none;" onclick="tapStart()">
   <div id="op-bg"></div>
   <div id="op-content">
@@ -449,8 +475,27 @@ function loadGasUrl(){
 // アプリ起動
 // ============================================================
 function startApp(){
-  const op = document.getElementById('opening');
-  op.style.display = 'flex';
+  const intro = document.getElementById('intro-screen');
+  intro.style.display = 'flex';
+  // 3.8秒後（フェードアウト完了後）に暗転→オープニングへ
+  setTimeout(()=>{
+    intro.classList.add('blackout');
+    setTimeout(()=>{
+      intro.style.display = 'none';
+      const op = document.getElementById('opening');
+      op.style.display = 'flex';
+    }, 600);
+  }, 3800);
+}
+
+function skipIntro(){
+  const intro = document.getElementById('intro-screen');
+  intro.classList.add('blackout');
+  setTimeout(()=>{
+    intro.style.display = 'none';
+    const op = document.getElementById('opening');
+    op.style.display = 'flex';
+  }, 600);
 }
 
 let openingStarted = false;
