@@ -690,7 +690,7 @@ async function regEntry(){
   }
 
   const totalQ = bets.reduce((s,b)=>s+b.qty, 0);
-  if(totalQ < 4){ toast('⚠️ 合計4口以上にしてください（現在'+totalQ+'口）'); return; }
+  if(totalQ < 2){ toast('⚠️ 合計2口以上にしてください（現在'+totalQ+'口）'); return; }
 
   // 重複確認
   const exists = DB.find(e=>e.name===name);
@@ -734,21 +734,35 @@ function renderList(){
   if(DB.length===0){ el.innerHTML='<div class="empty">まだ入力がありません</div>'; return; }
   el.innerHTML = DB.map(e=>{
     const totalQ = e.bets.reduce((s,b)=>s+b.qty, 0);
-    const betRows = e.bets.map(b=>
-      `<div class="ent-bet-row">・${b.p1} <small style="color:#888">－</small> ${b.p2}　<span style="font-weight:700;color:var(--green)">${b.qty}口</span></div>`
-    ).join('');
-    return `
-      <div class="ent-item">
-        <div class="ent-head">
-          <div class="ent-name">${e.name}</div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <span class="ent-total">${totalQ}口</span>
-            <button class="del-ent" onclick="delEntry('${e.name}')">削除</button>
+    if(kanjiUnlocked){
+      // 幹事モード：詳細表示
+      const betRows = e.bets.map(b=>
+        `<div class="ent-bet-row">・${b.p1} <small style="color:#888">－</small> ${b.p2}　<span style="font-weight:700;color:var(--green)">${b.qty}口</span></div>`
+      ).join('');
+      const t = e.time ? new Date(e.time) : null;
+      const timeStr = t && !isNaN(t) ? (t.getMonth()+1)+'/'+(t.getDate())+' '+(String(t.getHours()).padStart(2,'0'))+':'+(String(t.getMinutes()).padStart(2,'0')) : (e.time||'');
+      return `
+        <div class="ent-item">
+          <div class="ent-head">
+            <div class="ent-name">${e.name}</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="ent-total">${totalQ}口</span>
+              <button class="del-ent" onclick="delEntry('${e.name}')">削除</button>
+            </div>
           </div>
-        </div>
-        ${betRows}
-        <div class="ent-time">${e.time||''}</div>
-      </div>`;
+          ${betRows}
+          <div class="ent-time">${timeStr}</div>
+        </div>`;
+    } else {
+      // 通常モード：名前と口数のみ表示
+      return `
+        <div class="ent-item">
+          <div class="ent-head">
+            <div class="ent-name">${e.name}</div>
+            <span class="ent-total">${totalQ}口</span>
+          </div>
+        </div>`;
+    }
   }).join('');
 }
 
