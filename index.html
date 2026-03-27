@@ -229,6 +229,12 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 .odds-bar-w{width:60px;background:#eee;border-radius:4px;height:7px;overflow:hidden;}
 .odds-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;}
 
+/* おみくじ */
+@keyframes spinEl{to{transform:rotate(360deg);}}
+@keyframes resultIn{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+@keyframes starFly{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0);}}
+.omk-result-anim{animation:resultIn .5s cubic-bezier(.22,1,.36,1) both;}
+
 /* トースト */
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(20,20,20,.92);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;backdrop-filter:blur(4px);}
 #toast.on{opacity:1;}
@@ -301,6 +307,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   <button class="nb"    id="nb-quiz" onclick="go('quiz')"><span class="ic">🎯</span>クイズ入力</button>
   <button class="nb"    id="nb-chk"  onclick="go('chk')"> <span class="ic">🔍</span>投票確認</button>
   <button class="nb"    id="nb-odds" onclick="go('odds')"><span class="ic">📈</span>オッズ</button>
+  <button class="nb"    id="nb-omk"  onclick="go('omk')"> <span class="ic">🎰</span>おみくじ</button>
   <button class="nb"    id="nb-agg"  onclick="go('agg')"> <span class="ic">📊</span>集　計</button>
 </nav>
 
@@ -404,8 +411,68 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   </div>
 </div>
 
-<!-- ========== PAGE オッズ ========== -->
-<div id="p-odds" class="pg">
+<!-- ========== PAGE おみくじ ========== -->
+<div id="p-omk" class="pg">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);text-align:center;padding:24px 20px 20px;margin:10px 12px 0;border-radius:var(--r);box-shadow:var(--sh);">
+    <div style="font-size:36px;margin-bottom:6px;">🎰</div>
+    <h1 style="font-size:20px;font-weight:900;color:var(--gold);letter-spacing:.15em;">コンペおみくじ</h1>
+    <p style="font-size:12px;color:rgba(255,255,255,.6);margin-top:5px;">今日の勝負、運命の組み合わせを占う</p>
+  </div>
+
+  <!-- ガチャ演出エリア -->
+  <div class="card" style="margin-top:10px;text-align:center;">
+    <div class="cb">
+      <div id="omk-slot" style="
+        background:linear-gradient(135deg,#0f0f1a,#1a1a2e);
+        border-radius:12px;padding:28px 16px;margin-bottom:16px;
+        min-height:160px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;position:relative;overflow:hidden;
+      ">
+        <div id="omk-title" style="font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.2em;margin-bottom:10px;">ボタンを押して運命を占う</div>
+        <div id="omk-result-wrap" style="display:none;width:100%;">
+          <div id="omk-luck" style="font-size:28px;font-weight:900;letter-spacing:.15em;margin-bottom:8px;"></div>
+          <div id="omk-pair" style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.6;"></div>
+          <div id="omk-odds-badge" style="display:inline-block;border-radius:20px;padding:3px 14px;font-size:13px;font-weight:900;margin-bottom:10px;"></div>
+          <div id="omk-msg" style="font-size:13px;color:rgba(255,255,255,.75);line-height:1.7;padding:0 8px;"></div>
+        </div>
+        <div id="omk-spin-wrap" style="display:none;">
+          <div style="font-size:48px;animation:spinEl 0.15s linear infinite;" id="omk-spin-ico">🎰</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:8px;">運命を占っています…</div>
+        </div>
+        <!-- キラキラ装飾 -->
+        <div id="omk-stars" style="display:none;position:absolute;inset:0;pointer-events:none;"></div>
+      </div>
+
+      <button id="omk-btn" onclick="drawOmikuji()" style="
+        width:100%;padding:16px;
+        background:linear-gradient(135deg,#d4af37,#f5e06a,#d4af37);
+        color:#1a1a1a;border:none;border-radius:14px;
+        font-size:17px;font-weight:900;letter-spacing:.1em;cursor:pointer;
+        box-shadow:0 4px 20px rgba(212,175,55,.5);
+        transition:transform .1s;
+      " ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform='scale(1)'">
+        🎰　おみくじを引く
+      </button>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;">※ 参加者の投票データをもとに占います</p>
+    </div>
+  </div>
+
+  <!-- 運勢一覧 -->
+  <div class="card" style="margin-top:10px;margin-bottom:16px;">
+    <div class="cb">
+      <div class="st">📜 運勢の見方</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;">
+        <div>🌟 <strong>大吉</strong> — オッズ1倍台（超本命）</div>
+        <div>⭐ <strong>中吉</strong> — オッズ2〜3倍台（本命）</div>
+        <div>✨ <strong>吉</strong> &nbsp;— オッズ4〜6倍台（対抗）</div>
+        <div>💫 <strong>小吉</strong> — オッズ7〜10倍台（穴）</div>
+        <div>🌀 <strong>大穴</strong> — オッズ10倍超（超穴馬）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE オッズ ========== --><div id="p-odds" class="pg">
   <div class="agg-hd">
     <h1>📈 組み合わせオッズ</h1>
     <div class="agg-sum" id="odds-sum">読み込み中...</div>
@@ -644,7 +711,7 @@ function tapStart(){
 // ナビゲーション
 // ============================================================
 function go(name){
-  ['uma','quiz','chk','odds','agg'].forEach(n=>{
+  ['uma','quiz','chk','odds','omk','agg'].forEach(n=>{
     document.getElementById('p-'+n).classList.toggle('on', n===name);
     document.getElementById('nb-'+n).classList.toggle('on', n===name);
   });
@@ -1128,6 +1195,137 @@ async function rstAll(){
   } else {
     toast('❌ リセット失敗');
   }
+}
+
+// ============================================================
+// おみくじ
+// ============================================================
+const OMK_MSGS = {
+  '大吉': ['この組み合わせ、間違いなし！全力で張れ！💪','本命中の本命。迷わず行け！🔥','オッズは低いが、信頼は高い。勝負あり。'],
+  '中吉': ['なかなか良い目が出た。これは熱い！','対抗馬の中でも一番光る組み合わせ。⭐','この2人、コンペ当日に化けるかも。'],
+  '吉':   ['穴を狙うならこの組み合わせ。✨','意外性のある2人。当たれば喝采間違いなし。','みんなが見落としてる組み合わせかも。'],
+  '小吉': ['大穴狙いの勇者よ、これがお前の運命だ…💫','低オッズに惑わされるな。この2人に可能性を感じる。','ロマンの組み合わせ。当たったら伝説になれる。'],
+  '大穴': ['なんと！誰も予想していない組み合わせ！🌀','オッズ爆発。リスク大、リターン大。これぞ真のギャンブル。','この結果、神のみぞ知る…運命を信じるか？'],
+};
+
+function getOmkLuck(odds){
+  if(odds < 2)  return '大吉';
+  if(odds < 4)  return '中吉';
+  if(odds < 7)  return '吉';
+  if(odds <= 10) return '小吉';
+  return '大穴';
+}
+
+const OMK_COLORS = {
+  '大吉': {bg:'linear-gradient(135deg,#d4af37,#f5e06a)', color:'#1a1a1a'},
+  '中吉': {bg:'linear-gradient(135deg,#e65100,#ff8f00)', color:'#fff'},
+  '吉':   {bg:'linear-gradient(135deg,#1565c0,#42a5f5)', color:'#fff'},
+  '小吉': {bg:'linear-gradient(135deg,#4a148c,#9c27b0)', color:'#fff'},
+  '大穴': {bg:'linear-gradient(135deg,#b71c1c,#e53935)', color:'#fff'},
+};
+
+let omkDrawing = false;
+
+function drawOmikuji(){
+  if(omkDrawing) return;
+
+  // 全プレイヤーから連複集計
+  const comboMap = {};
+  let totalQ = 0;
+  DB.forEach(e=>e.bets.forEach(b=>{
+    if(!b.p1||!b.p2) return;
+    const pair = [b.p1,b.p2].sort();
+    const key = `${pair[0]}|${pair[1]}`;
+    comboMap[key] = (comboMap[key]||0) + b.qty;
+    totalQ += b.qty;
+  }));
+
+  // 投票データがない場合は全プレイヤーから均等にランダム
+  let combos;
+  if(totalQ === 0){
+    const pl = [...PLAYERS];
+    combos = [];
+    for(let i=0;i<pl.length;i++) for(let j=i+1;j<pl.length;j++)
+      combos.push({p1:pl[i],p2:pl[j],qty:1,odds:pl.length*(pl.length-1)/2});
+  } else {
+    combos = Object.entries(comboMap).map(([key,qty])=>{
+      const [p1,p2] = key.split('|');
+      return {p1,p2,qty,odds:Math.round(totalQ/qty*10)/10};
+    });
+  }
+
+  // ランダム選択（口数に反比例した重み → 穴も出やすく）
+  const idx = Math.floor(Math.random() * combos.length);
+  const picked = combos[idx];
+  const luck = getOmkLuck(picked.odds);
+  const col = OMK_COLORS[luck];
+  const msgs = OMK_MSGS[luck];
+  const msg = msgs[Math.floor(Math.random()*msgs.length)];
+
+  // スピン演出
+  omkDrawing = true;
+  const btn = document.getElementById('omk-btn');
+  btn.disabled = true;
+  const title = document.getElementById('omk-title');
+  const resultWrap = document.getElementById('omk-result-wrap');
+  const spinWrap = document.getElementById('omk-spin-wrap');
+  title.style.display='none';
+  resultWrap.style.display='none';
+  spinWrap.style.display='flex';
+  spinWrap.style.flexDirection='column';
+  spinWrap.style.alignItems='center';
+
+  const spinIcos = ['🎰','🏌️','⛳','🏆','🎯','💰'];
+  let si=0;
+  const spinTimer = setInterval(()=>{
+    document.getElementById('omk-spin-ico').textContent = spinIcos[si++%spinIcos.length];
+  }, 120);
+
+  setTimeout(()=>{
+    clearInterval(spinTimer);
+    spinWrap.style.display='none';
+
+    // 結果表示
+    document.getElementById('omk-luck').textContent = luck;
+    document.getElementById('omk-luck').style.cssText =
+      `font-size:28px;font-weight:900;letter-spacing:.15em;margin-bottom:8px;`+
+      `background:${col.bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;`;
+    document.getElementById('omk-pair').textContent = `${picked.p1} ＆ ${picked.p2}`;
+    const badge = document.getElementById('omk-odds-badge');
+    badge.textContent = totalQ>0 ? `オッズ ${picked.odds.toFixed(1)}倍` : 'オッズ未確定';
+    badge.style.cssText = `background:${col.bg};color:${col.color};display:inline-block;border-radius:20px;padding:3px 14px;font-size:13px;font-weight:900;margin-bottom:10px;`;
+    document.getElementById('omk-msg').textContent = msg;
+    resultWrap.style.display='block';
+    resultWrap.classList.remove('omk-result-anim');
+    void resultWrap.offsetWidth;
+    resultWrap.classList.add('omk-result-anim');
+
+    // キラキラ演出
+    spawnStars(luck);
+
+    btn.disabled=false;
+    btn.textContent='🎰　もう一度引く';
+    omkDrawing=false;
+  }, 1800);
+}
+
+function spawnStars(luck){
+  const container = document.getElementById('omk-stars');
+  container.style.display='block';
+  container.innerHTML='';
+  const count = luck==='大吉'?20:luck==='中吉'?14:luck==='大穴'?18:8;
+  const icos = luck==='大吉'?['⭐','🌟','✨','💛']:
+               luck==='大穴'?['🌀','💥','❗','🔥']:['✨','💫','⭐'];
+  for(let i=0;i<count;i++){
+    const s = document.createElement('div');
+    const tx = (Math.random()-0.5)*300;
+    const ty = (Math.random()-0.5)*300;
+    s.style.cssText = `position:absolute;left:50%;top:50%;font-size:${12+Math.random()*16}px;`+
+      `--tx:${tx}px;--ty:${ty}px;animation:starFly ${0.6+Math.random()*0.8}s ease-out ${Math.random()*0.4}s both;`;
+    s.textContent = icos[Math.floor(Math.random()*icos.length)];
+    container.appendChild(s);
+  }
+  setTimeout(()=>{ container.style.display='none'; container.innerHTML=''; }, 2000);
 }
 
 // ============================================================
