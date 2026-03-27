@@ -216,6 +216,19 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
 .a-txt{background:var(--green);color:#fff;}
 .a-rst{background:var(--red);color:#fff;}
 
+/* オッズ表 */
+.odds-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f5f5f5;}
+.odds-row:last-child{border-bottom:none;}
+.odds-rank{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;background:#eee;color:#555;}
+.odds-pair{flex:1;font-size:13px;font-weight:700;line-height:1.5;}
+.odds-pair .p1{color:var(--gold2);background:var(--green2);border-radius:4px;padding:1px 6px;font-size:11px;font-weight:900;margin-right:3px;}
+.odds-pair .p2{color:#fff;background:#666;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:900;margin-right:3px;}
+.odds-val{font-size:20px;font-weight:900;color:var(--red);min-width:56px;text-align:right;}
+.odds-val.fav{color:var(--green);}
+.odds-cnt{font-size:10px;color:var(--muted);min-width:32px;text-align:right;}
+.odds-bar-w{width:60px;background:#eee;border-radius:4px;height:7px;overflow:hidden;}
+.odds-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;}
+
 /* トースト */
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(20,20,20,.92);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;backdrop-filter:blur(4px);}
 #toast.on{opacity:1;}
@@ -287,6 +300,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   <button class="nb on" id="nb-uma"  onclick="go('uma')"> <span class="ic">⛳</span>組み合わせ</button>
   <button class="nb"    id="nb-quiz" onclick="go('quiz')"><span class="ic">🎯</span>クイズ入力</button>
   <button class="nb"    id="nb-chk"  onclick="go('chk')"> <span class="ic">🔍</span>投票確認</button>
+  <button class="nb"    id="nb-odds" onclick="go('odds')"><span class="ic">📈</span>オッズ</button>
   <button class="nb"    id="nb-agg"  onclick="go('agg')"> <span class="ic">📊</span>集　計</button>
 </nav>
 
@@ -386,6 +400,23 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
         </div>
       </div>
       <div id="ent-list"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE オッズ ========== -->
+<div id="p-odds" class="pg">
+  <div class="agg-hd">
+    <h1>📈 組み合わせオッズ</h1>
+    <div class="agg-sum" id="odds-sum">読み込み中...</div>
+    <div class="live-badge"><span class="live-dot"></span>LIVE 自動更新 30秒</div>
+    <button class="ref-btn" onclick="fetchAndRender()">🔄 今すぐ更新</button>
+  </div>
+  <div class="card" style="margin-top:10px;margin-bottom:16px;">
+    <div class="cb">
+      <div class="st">🏇 1位 × 2位 組み合わせオッズ</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">投票が多い組み合わせほどオッズが低くなります</div>
+      <div id="odds-table"><div class="empty">データなし</div></div>
     </div>
   </div>
 </div>
@@ -613,12 +644,13 @@ function tapStart(){
 // ナビゲーション
 // ============================================================
 function go(name){
-  ['uma','quiz','chk','agg'].forEach(n=>{
+  ['uma','quiz','chk','odds','agg'].forEach(n=>{
     document.getElementById('p-'+n).classList.toggle('on', n===name);
     document.getElementById('nb-'+n).classList.toggle('on', n===name);
   });
   if(name==='quiz') fetchAndRender();
   if(name==='chk')  fetchAndRender();
+  if(name==='odds') fetchAndRender();
   if(name==='agg')  fetchAndRender();
 }
 
@@ -703,6 +735,7 @@ async function fetchAndRender(){
     updCnt();
     renderList();
     renderAgg();
+    renderOdds();
   }
 }
 
@@ -1089,6 +1122,59 @@ async function rstAll(){
   } else {
     toast('❌ リセット失敗');
   }
+}
+
+// ============================================================
+// オッズ計算・描画
+// ============================================================
+function renderOdds(){
+  const el = document.getElementById('odds-table');
+  const sumEl = document.getElementById('odds-sum');
+  if(!el) return;
+
+  if(!DB.length){
+    el.innerHTML='<div class="empty">まだ投票がありません</div>';
+    if(sumEl) sumEl.textContent='投票待ち';
+    return;
+  }
+
+  // 組み合わせ集計（p1-p2 で口数合計）
+  const comboMap = {};
+  let totalQ = 0;
+  DB.forEach(e=>e.bets.forEach(b=>{
+    if(!b.p1||!b.p2) return;
+    const key = `${b.p1}|${b.p2}`;
+    comboMap[key] = (comboMap[key]||0) + b.qty;
+    totalQ += b.qty;
+  }));
+
+  if(sumEl) sumEl.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}口`;
+
+  if(!totalQ){ el.innerHTML='<div class="empty">データなし</div>'; return; }
+
+  // オッズ計算: totalQ / comboQty（小数点1桁）
+  const sorted = Object.entries(comboMap)
+    .map(([key, qty])=>{
+      const [p1,p2] = key.split('|');
+      const odds = Math.round((totalQ / qty) * 10) / 10;
+      return {p1, p2, qty, odds};
+    })
+    .sort((a,b)=>a.odds - b.odds); // オッズ低い（人気）順
+
+  const maxQty = sorted[0].qty;
+  const cls = ['rp1','rp2','rp3'];
+
+  el.innerHTML = sorted.map(({p1,p2,qty,odds},i)=>`
+    <div class="odds-row">
+      <div class="odds-rank ${cls[i]||''}">${i+1}</div>
+      <div class="odds-pair">
+        <span class="p1">1位</span>${p1}<br>
+        <span class="p2">2位</span>${p2}
+      </div>
+      <div class="odds-bar-w"><div class="odds-bar" style="width:${Math.round(qty/maxQty*100)}%"></div></div>
+      <div class="odds-cnt">${qty}口</div>
+      <div class="odds-val ${odds<=3?'fav':''}">${odds.toFixed(1)}<small style="font-size:11px;font-weight:400;">倍</small></div>
+    </div>`).join('');
 }
 
 // ============================================================
