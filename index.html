@@ -414,8 +414,8 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   </div>
   <div class="card" style="margin-top:10px;margin-bottom:16px;">
     <div class="cb">
-      <div class="st">🏇 1位 × 2位 組み合わせオッズ</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">投票が多い組み合わせほどオッズが低くなります</div>
+      <div class="st">🏇 トップ2 組み合わせオッズ（連複）</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">順不同・どちらが1位でもOK。票が多いほどオッズが低くなります</div>
       <div id="odds-table"><div class="empty">データなし</div></div>
     </div>
   </div>
@@ -474,7 +474,7 @@ html,body{font-family:'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-seri
   <div id="public-view">
     <div class="card" style="margin-top:10px;">
       <div class="cb">
-        <div class="st">🥇 優勝予想 ランキング</div>
+        <div class="st">🥇 トップ2予想 ランキング（連複）</div>
         <div id="r1"><div class="empty">データなし</div></div>
       </div>
     </div>
@@ -978,13 +978,19 @@ function renderAgg(){
   const el = document.getElementById('agg-sum');
   if(el) el.textContent = `投票: ${DB.length}名 ／ 合計: ${totalQ}口`;
 
-  const c1={}, c2={};
+  // 連複式：p1・p2どちらに入っても同じ選手への票として合算
+  const c1={};
   DB.forEach(e=>e.bets.forEach(b=>{
     c1[b.p1] = (c1[b.p1]||0) + b.qty;
-    c2[b.p2] = (c2[b.p2]||0) + b.qty;
+    c1[b.p2] = (c1[b.p2]||0) + b.qty;
   }));
   renderRank('r1', c1);
-  renderRank('r2', c2);
+
+  // 準優勝ランキングは非表示（連複なので1つにまとめる）
+  const r2el = document.getElementById('r2');
+  const r2card = r2el && r2el.closest('.card');
+  if(r2card) r2card.style.display='none';
+
   renderKanjiDetail();
 }
 
@@ -1138,12 +1144,14 @@ function renderOdds(){
     return;
   }
 
-  // 組み合わせ集計（p1-p2 で口数合計）
+  // 組み合わせ集計（連複：A×BとB×Aを同一視）
   const comboMap = {};
   let totalQ = 0;
   DB.forEach(e=>e.bets.forEach(b=>{
     if(!b.p1||!b.p2) return;
-    const key = `${b.p1}|${b.p2}`;
+    // 名前をソートして常に同じキーにする
+    const pair = [b.p1, b.p2].sort();
+    const key = `${pair[0]}|${pair[1]}`;
     comboMap[key] = (comboMap[key]||0) + b.qty;
     totalQ += b.qty;
   }));
@@ -1168,8 +1176,7 @@ function renderOdds(){
     <div class="odds-row">
       <div class="odds-rank ${cls[i]||''}">${i+1}</div>
       <div class="odds-pair">
-        <span class="p1">1位</span>${p1}<br>
-        <span class="p2">2位</span>${p2}
+        <span class="p1">連複</span>${p1} ＆ ${p2}
       </div>
       <div class="odds-bar-w"><div class="odds-bar" style="width:${Math.round(qty/maxQty*100)}%"></div></div>
       <div class="odds-cnt">${qty}口</div>
