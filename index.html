@@ -958,7 +958,7 @@ function renderAgg(){
 function renderRank(id, map){
   const el = document.getElementById(id);
   if(!el) return;
-  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
   if(!sorted.length){ el.innerHTML='<div class="empty">データなし</div>'; return; }
   const max = sorted[0][1];
   const cls = ['rp1','rp2','rp3'];
