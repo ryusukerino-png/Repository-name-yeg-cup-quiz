@@ -681,26 +681,14 @@ let openingStarted = false;
 function tapStart(){
   if(openingStarted) return;
   openingStarted = true;
-  // ファンファーレ再生（ユーザー操作直後なので必ず鳴る）
-  const se = document.getElementById('fanfare');
-  if(se){ se.currentTime=0; se.volume=1.0; se.play().catch(()=>{}); }
-  // バー進行→8秒後に画面切り替え
-  const bar = document.getElementById('op-bar');
-  let progress = 0;
-  const timer = setInterval(()=>{
-    progress += 100/80;
-    if(bar) bar.style.width = Math.min(progress,100) + '%';
-    if(progress >= 100){
-      clearInterval(timer);
-      const op = document.getElementById('opening');
-      const app = document.getElementById('app-wrap');
-      op.style.display = 'none';
-      app.style.display = 'block';
-      app.classList.add('visible');
-      fetchAndRender();
-      startAutoRefresh();
-    }
-  }, 100);
+  // タップですぐ画面切り替え（BGMなし・バー演出なし）
+  const op = document.getElementById('opening');
+  const app = document.getElementById('app-wrap');
+  op.style.display = 'none';
+  app.style.display = 'block';
+  app.classList.add('visible');
+  fetchAndRender();
+  startAutoRefresh();
 }
 
 // ============================================================
